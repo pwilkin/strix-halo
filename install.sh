@@ -326,6 +326,14 @@ checkout_pinned() {
   local expected_ssh=git@github.com:${url#https://github.com/}
   configured_url=$(git -C "$destination" remote get-url origin)
   [[ $configured_url == "$url" || $configured_url == "$expected_ssh" ]] || die "$destination uses unexpected origin $configured_url"
+
+  if [[ $label == 'pwilkin/rocm-systems' ]]; then
+    local generated_profile_header=projects/clr/hipamd/include/hip/amd_detail/hip_prof_str.h
+    if ! git -C "$destination" diff --quiet -- "$generated_profile_header"; then
+      warn "Restoring $generated_profile_header after the HIP build regenerated it"
+      git -C "$destination" restore --worktree -- "$generated_profile_header"
+    fi
+  fi
   [[ -z $(git -C "$destination" status --porcelain) ]] || die "$destination has local changes; preserve or remove them before rerunning the installer"
 
   git -C "$destination" fetch origin "+refs/heads/$branch:refs/remotes/origin/$branch"
