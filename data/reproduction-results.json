@@ -1,0 +1,66 @@
+{
+  "updated": "2026-09-05",
+  "hardware": "AMD Ryzen AI Max+ 395 / Radeon 8060S / gfx1151 / 128 GB unified memory",
+  "protocol": {
+    "prompt": "Detailed description of ggml/src/ggml-backend-meta.cpp",
+    "prompt_tokens": 31497,
+    "generated_tokens": 256,
+    "context_allocation": 65536,
+    "batch": 2048,
+    "ubatch": 512,
+    "sampling": "temperature 0, top_k 1, fixed seed, ignore_eos",
+    "speculation": "DFlash2, n_min 0, n_max 3, p_min 0.10",
+    "cache_prompt": false,
+    "warmup": "one discarded 32-token request per server",
+    "order": ["ours-a", "nathan-derived-a", "rocmfp4-a", "rocmfp4-b", "nathan-derived-b", "ours-b"],
+    "gpu_boundary_temperature_c": [37, 54]
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "name": "selected IQ4_XS target + IQ4_XS DFlash2, custom ROCm retained PM4",
+      "engine_commit": "d3b5cc43d1fcfce891f2de94d5274ee40eceb21c",
+      "target": "Qwen3.8-27B-IQ4_XS-ALL-IMATRIX-Q8-OUT-MTP.gguf",
+      "draft": "Qwen3.8-27B-DFlash2-IQ4_XS.gguf",
+      "backend": "ROCm0",
+      "prompt_tps_mean": 256.838062,
+      "decode_tps_mean": 26.255780,
+      "decode_tps_range": [26.232112, 26.279448],
+      "acceptance": 0.607407407,
+      "margin_over_rocmfp4_percent": 13.328197,
+      "margin_over_nathan_derived_vulkan_percent": 25.376410
+    },
+    {
+      "rank": 2,
+      "name": "ROCmFP4 FAST target + FP4 DFlash2, Nathan-derived Vulkan stack",
+      "engine_commit": "5e085d123eead2e89b5c19f824fccb05727da6a2",
+      "target": "Qwen3.8-27B-Q4_0_ROCMFP4_FAST.gguf",
+      "draft": "Qwen3.8-27B-DFlash2-Q4_0_ROCMFP4_FAST.gguf",
+      "backend": "Vulkan0",
+      "prompt_tps_mean": 215.636477,
+      "decode_tps_mean": 23.167915,
+      "decode_tps_range": [23.142938, 23.192892],
+      "acceptance": 0.575
+    },
+    {
+      "rank": 3,
+      "name": "selected IQ4_XS target + IQ4_XS DFlash2, Nathan-derived Vulkan stack",
+      "engine_commit": "5e085d123eead2e89b5c19f824fccb05727da6a2",
+      "target": "Qwen3.8-27B-IQ4_XS-ALL-IMATRIX-Q8-OUT-MTP.gguf",
+      "draft": "Qwen3.8-27B-DFlash2-IQ4_XS.gguf",
+      "backend": "Vulkan0",
+      "prompt_tps_mean": 219.668491,
+      "decode_tps_mean": 20.941563,
+      "decode_tps_range": [20.932848, 20.950278],
+      "acceptance": 0.607407407
+    }
+  ],
+  "runs": [
+    {"arm":"ours-a","prompt_tps":258.581831,"decode_tps":26.232112,"drafted":270,"accepted":164,"output_sha256":"e0994a8d60081de72e4a2525958db98297592405f5a57f7f46de097a68fabda5"},
+    {"arm":"nathan-derived-a","prompt_tps":218.752642,"decode_tps":20.932848,"drafted":270,"accepted":164,"output_sha256":"1551b34fadf6083b8c6d57aefa08bfac006d4bdcddde90633bfe0b91094da639"},
+    {"arm":"rocmfp4-a","prompt_tps":215.578059,"decode_tps":23.192892,"drafted":280,"accepted":161,"output_sha256":"185806349931ec44e44799dc98c6400478d5e83ee96f86495d524b9acf653d82"},
+    {"arm":"rocmfp4-b","prompt_tps":215.694895,"decode_tps":23.142938,"drafted":280,"accepted":161,"output_sha256":"185806349931ec44e44799dc98c6400478d5e83ee96f86495d524b9acf653d82"},
+    {"arm":"nathan-derived-b","prompt_tps":220.584341,"decode_tps":20.950278,"drafted":270,"accepted":164,"output_sha256":"1551b34fadf6083b8c6d57aefa08bfac006d4bdcddde90633bfe0b91094da639"},
+    {"arm":"ours-b","prompt_tps":255.094293,"decode_tps":26.279448,"drafted":270,"accepted":164,"output_sha256":"e0994a8d60081de72e4a2525958db98297592405f5a57f7f46de097a68fabda5"}
+  ]
+}

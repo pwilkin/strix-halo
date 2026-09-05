@@ -697,6 +697,98 @@ table a {
   color: var(--muted-strong);
 }
 
+.reproduction-card {
+  overflow: hidden;
+  margin-block: 32px 72px;
+  border: 1px solid rgba(255, 105, 97, 0.3);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 90% 0, rgba(255, 75, 75, 0.12), transparent 28%),
+    rgba(10, 12, 17, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.repro-header,
+.context-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.repro-header {
+  padding: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.repro-header h3,
+.context-heading h3 {
+  margin: 7px 0 0;
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.repro-table-wrap {
+  overflow-x: auto;
+}
+
+.repro-table {
+  min-width: 1020px;
+}
+
+.repro-table td:first-child {
+  min-width: 66px;
+}
+
+.repro-table td:nth-child(2) {
+  min-width: 285px;
+}
+
+.winner-row {
+  background: rgba(255, 75, 75, 0.065);
+}
+
+.rank {
+  color: var(--muted);
+  font: 760 0.74rem "SFMono-Regular", Consolas, monospace;
+}
+
+.kind.reproduced {
+  background: rgba(93, 228, 215, 0.1);
+  color: var(--cyan);
+}
+
+.margin-chip {
+  display: inline-flex;
+  padding: 5px 8px;
+  border: 1px solid rgba(93, 228, 215, 0.24);
+  border-radius: 8px;
+  color: var(--cyan);
+  font-weight: 800;
+}
+
+.margin-chip.winner {
+  border-color: rgba(255, 105, 97, 0.35);
+  background: rgba(255, 75, 75, 0.1);
+  color: var(--red-bright);
+}
+
+.repro-note {
+  margin: 0;
+  padding: 20px 28px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.repro-note code {
+  color: var(--cyan);
+}
+
+.context-heading {
+  margin-bottom: 24px;
+}
+
 .benchmark-filters {
   display: flex;
   flex: 0 0 auto;
@@ -1058,6 +1150,12 @@ tr.filtered-out {
   }
 
   .benchmark-intro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .repro-header,
+  .context-heading {
     align-items: flex-start;
     flex-direction: column;
   }

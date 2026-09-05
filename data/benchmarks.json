@@ -1,6 +1,16 @@
 {
   "updated": "2026-09-05",
   "warning": "These rows use different prompts, context depths, power limits, quantizations, engines, and speculative policies. Compare protocol before comparing token rates.",
+  "matched_reproduction": {
+    "prompt_tokens": 31497,
+    "generated_tokens": 256,
+    "winner": "selected IQ4_XS target + IQ4_XS DFlash2, custom ROCm retained PM4",
+    "winner_decode_tps": 26.255780,
+    "winner_prompt_tps": 256.838062,
+    "margin_over_rocmfp4_percent": 13.328197,
+    "margin_over_nathan_derived_vulkan_percent": 25.376410,
+    "details": "data/reproduction-results.json"
+  },
   "our_protocol": {
     "hardware": "AMD Ryzen AI Max+ 395 / Radeon 8060S / gfx1151",
     "backend": "custom HIP and ROCr retained PM4",

@@ -55,17 +55,17 @@
         <aside class="hero-panel reveal" aria-label="Measured performance summary">
           <div class="panel-label">Measured here · retained PM4</div>
           <div class="hero-metric">
-            <strong>58.53</strong>
+            <strong>26.26</strong>
             <span>tok/s</span>
           </div>
-          <p>Structured JSON workload · DFlash2 width 6</p>
+          <p>31.5K-token matched reproduction · DFlash2 width 3</p>
           <div class="mini-grid">
-            <div><strong>39.14</strong><span>reasoning</span></div>
-            <div><strong>25.74</strong><span>prose</span></div>
-            <div><strong>14.10</strong><span>plain decode</span></div>
-            <div><strong>15.40</strong><span>held-out PPL</span></div>
+            <div><strong>+13.3%</strong><span>vs ROCmFP4</span></div>
+            <div><strong>+25.4%</strong><span>vs Vulkan</span></div>
+            <div><strong>256.84</strong><span>prompt t/s</span></div>
+            <div><strong>60.7%</strong><span>acceptance</span></div>
           </div>
-          <p class="micro-note">Prompt-dependent results, not a universal model-speed claim.</p>
+          <p class="micro-note">Two-pass range: 26.23–26.28 t/s. Same 31,497-token prompt across all reproduced stacks.</p>
         </aside>
       </section>
 
@@ -202,16 +202,82 @@
         <div class="section-heading reveal">
           <span class="section-number">03</span>
           <div>
-            <p class="kicker">The honest leaderboard</p>
-            <h2>Same chip. Very different measurements.</h2>
+            <p class="kicker">The controlled leaderboard</p>
+            <h2>Reproduced first. Reported second.</h2>
           </div>
         </div>
 
         <div class="benchmark-intro reveal">
           <p>
-            Strix Halo results vary with quantization, speculative method, acceptance, context depth, power limit, and—most of all—prompt.
-            This table keeps the headline numbers visible while preserving the protocol differences that make them non-interchangeable.
+            We reran the alternative stacks on this Radeon 8060S with the same 31,497-token source-file prompt, 256-token output,
+            fixed-width DFlash2 policy, warmup, and palindrome ordering. In that reproduction, our custom ROCm stack is the fastest on both prefill and decode.
           </p>
+        </div>
+
+        <div class="reproduction-card reveal">
+          <div class="repro-header">
+            <div>
+              <p class="kicker">Matched long-prompt reproduction</p>
+              <h3>Our stack leads by 13–25%.</h3>
+            </div>
+            <a href="data/reproduction-results.json" class="text-link">Machine-readable evidence <span>↗</span></a>
+          </div>
+          <div class="repro-table-wrap">
+            <table class="repro-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Reproduced stack</th>
+                  <th>Prompt</th>
+                  <th>Decode</th>
+                  <th>Acceptance</th>
+                  <th>Two-pass range</th>
+                  <th>Our margin</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td><span class="rank">01</span></td>
+                  <td><span class="kind ours">Our stack</span><strong>Selected IQ4_XS + IQ4_XS DFlash2</strong><br>custom ROCm · retained PM4</td>
+                  <td><strong>256.84 t/s</strong></td>
+                  <td><strong>26.256 t/s</strong></td>
+                  <td>60.74%</td>
+                  <td>26.232–26.279</td>
+                  <td><span class="margin-chip winner">Fastest</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rank">02</span></td>
+                  <td><span class="kind reproduced">Reproduced</span><strong>ROCmFP4 FAST + FP4 DFlash2</strong><br>Nathan-derived Vulkan kernel stack</td>
+                  <td><strong>215.64 t/s</strong></td>
+                  <td><strong>23.168 t/s</strong></td>
+                  <td>57.50%</td>
+                  <td>23.143–23.193</td>
+                  <td><span class="margin-chip">+13.33%</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rank">03</span></td>
+                  <td><span class="kind reproduced">Reproduced</span><strong>Same selected IQ4_XS models</strong><br>Nathan-derived Vulkan kernel stack</td>
+                  <td><strong>219.67 t/s</strong></td>
+                  <td><strong>20.942 t/s</strong></td>
+                  <td>60.74%</td>
+                  <td>20.933–20.950</td>
+                  <td><span class="margin-chip">+25.38%</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="repro-note">
+            “Nathan-derived” means the measured Vulkan fork at <code>5e085d12</code>, which ports and credits Nathanw1014’s Strix Halo Vulkan gates.
+            The ROCmFP4 arm changes target and draft together; the same-model Vulkan arm isolates the engine/backend. All six generations were coherent,
+            every arm reproduced within 0.25%, and temperatures remained 37–54 °C.
+          </p>
+        </div>
+
+        <div class="context-heading reveal">
+          <div>
+            <p class="kicker">Broader context</p>
+            <h3>Community headlines and our shallow workload matrix</h3>
+          </div>
           <div class="benchmark-filters" role="group" aria-label="Filter benchmark rows">
             <button class="filter-button active" type="button" data-filter="all">All results</button>
             <button class="filter-button" type="button" data-filter="ours">Measured here</button>

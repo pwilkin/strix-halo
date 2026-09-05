@@ -50,6 +50,16 @@ runs an arbitrary model with the custom HIP and ROCr library overrides.
 
 The benchmark page deliberately labels protocol differences. Token rates from different prompts, context depths, quantizations, engines, power limits, and speculative acceptance levels are not interchangeable.
 
+The primary comparison is a matched 31,497-token reproduction on one Radeon 8060S. Each stack processed the same source-file prompt and generated 256 tokens in a palindrome-ordered, two-pass bracket:
+
+| Reproduced stack | Prompt t/s | Decode t/s | Our margin |
+| --- | ---: | ---: | ---: |
+| Selected IQ4_XS + IQ4_XS DFlash2, custom ROCm retained PM4 | 256.84 | 26.256 | fastest |
+| ROCmFP4 FAST + FP4 DFlash2, Nathan-derived Vulkan stack | 215.64 | 23.168 | +13.33% |
+| Same selected IQ4_XS models, Nathan-derived Vulkan stack | 219.67 | 20.942 | +25.38% |
+
+The aggregated and per-run values are published in `data/reproduction-results.json`.
+
 ## Support
 
 If this work is useful, support future experiments at <https://buymeacoffee.com/ilintar>.
