@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#090b10">
+    <meta name="description" content="A reproducible ROCm, retained-PM4, and DFlash2 setup for running Qwen3.8-27B on AMD Strix Halo.">
+    <meta property="og:title" content="Strix Halo × Qwen3.8">
+    <meta property="og:description" content="Build the optimized ROCm stack, download the selected GGUFs, and launch Qwen3.8-27B with DFlash2 in one command.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pwilkin.github.io/strix-halo/">
+    <link rel="canonical" href="https://pwilkin.github.io/strix-halo/">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <title>Strix Halo × Qwen3.8</title>
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Strix Halo home">
+        <span class="brand-mark" aria-hidden="true">SH</span>
+        <span>Strix Halo Lab</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#install">Install</a>
+        <a href="#requirements">Prerequisites</a>
+        <a href="#benchmarks">Benchmarks</a>
+        <a class="nav-github" href="https://github.com/pwilkin/strix-halo">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="hero-copy reveal">
+          <div class="eyebrow"><span></span> Radeon 8060S · gfx1151</div>
+          <h1>Run a serious 27B model<br><em>on the machine beside you.</em></h1>
+          <p class="hero-lead">
+            A reproducible Qwen3.8-27B stack for Strix Halo: calibrated IQ4_XS weights,
+            an IQ4_XS DFlash2 drafter, the UMA scheduler ring, and retained-PM4 dispatch.
+            Built from source, installed in your home directory.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#install">Install the stack</a>
+            <a class="button button-secondary" href="https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo">View the models</a>
+          </div>
+          <ul class="signal-list" aria-label="Project highlights">
+            <li><span class="signal-dot"></span>No system ROCm replacement</li>
+            <li><span class="signal-dot"></span>SHA-256 verified models</li>
+            <li><span class="signal-dot"></span>Exact tested Git pins</li>
+          </ul>
+        </div>
+
+        <aside class="hero-panel reveal" aria-label="Measured performance summary">
+          <div class="panel-label">Measured here · retained PM4</div>
+          <div class="hero-metric">
+            <strong>58.53</strong>
+            <span>tok/s</span>
+          </div>
+          <p>Structured JSON workload · DFlash2 width 6</p>
+          <div class="mini-grid">
+            <div><strong>39.14</strong><span>reasoning</span></div>
+            <div><strong>25.74</strong><span>prose</span></div>
+            <div><strong>14.10</strong><span>plain decode</span></div>
+            <div><strong>15.40</strong><span>held-out PPL</span></div>
+          </div>
+          <p class="micro-note">Prompt-dependent results, not a universal model-speed claim.</p>
+        </aside>
+      </section>
+
+      <section class="ticker" aria-label="Technology stack">
+        <div>
+          <span>Qwen3.8-27B</span><i></i>
+          <span>ROCm / HIP</span><i></i>
+          <span>Retained PM4</span><i></i>
+          <span>DFlash2</span><i></i>
+          <span>IQ4_XS</span><i></i>
+          <span>OpenAI-compatible API</span>
+        </div>
+      </section>
+
+      <section id="install" class="content-section section-shell">
+        <div class="section-heading reveal">
+          <span class="section-number">01</span>
+          <div>
+            <p class="kicker">One command</p>
+            <h2>From source to serving.</h2>
+          </div>
+        </div>
+
+        <div class="install-card reveal">
+          <div class="terminal-bar">
+            <div class="terminal-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span>bash · interactive installer</span>
+          </div>
+          <div class="command-row">
+            <code id="install-command">bash &lt;(curl -fsSL https://raw.githubusercontent.com/pwilkin/strix-halo/main/install.sh)</code>
+            <button class="copy-button" type="button" data-copy-target="install-command">
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="command-meta">
+            <span>Models default to <code>~/.models</code></span>
+            <span>Builds default to <code>~/.local/share/qwen3.8-strix-halo</code></span>
+          </div>
+        </div>
+
+        <div class="safety-note reveal">
+          <span class="safety-icon" aria-hidden="true">i</span>
+          <p>
+            Process substitution keeps stdin attached to your terminal, so the installer can ask where to store the models.
+            Prefer to inspect scripts before executing them: <a href="install.sh">open the installer source</a> or download it first.
+          </p>
+        </div>
+
+        <div class="step-grid">
+          <article class="step-card reveal">
+            <span>01</span>
+            <h3>Verify</h3>
+            <p>Checks amdgpu, KFD and render access, gfx1151 topology, build tools, and a complete ROCm SDK.</p>
+          </article>
+          <article class="step-card reveal">
+            <span>02</span>
+            <h3>Build</h3>
+            <p>Compiles pinned ROCr, HIP, and llama.cpp revisions into isolated, user-owned prefixes.</p>
+          </article>
+          <article class="step-card reveal">
+            <span>03</span>
+            <h3>Fetch</h3>
+            <p>Downloads the selected target, DFlash2 draft, and Bartowski BF16 projector through resumable Xet transfers.</p>
+          </article>
+          <article class="step-card reveal">
+            <span>04</span>
+            <h3>Serve</h3>
+            <p>Installs optimized and generic launchers in <code>~/.local/bin</code>, then adds that directory to your PATH.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="requirements" class="content-section section-shell">
+        <div class="section-heading reveal">
+          <span class="section-number">02</span>
+          <div>
+            <p class="kicker">Before you begin</p>
+            <h2>Prerequisites, checked—not guessed.</h2>
+          </div>
+        </div>
+
+        <div class="requirements-layout">
+          <div class="requirement-list reveal">
+            <article>
+              <div class="requirement-icon">GPU</div>
+              <div>
+                <h3>AMD Strix Halo</h3>
+                <p>Ryzen AI Max / Max+ with Radeon 8050S or 8060S exposed through KFD as <code>gfx1151</code>.</p>
+              </div>
+            </article>
+            <article>
+              <div class="requirement-icon">OS</div>
+              <div>
+                <h3>64-bit Linux</h3>
+                <p>The amdgpu kernel module, <code>/dev/kfd</code>, and a writable DRM render node must be available to your user.</p>
+              </div>
+            </article>
+            <article>
+              <div class="requirement-icon">SDK</div>
+              <div>
+                <h3>ROCm development stack</h3>
+                <p>HIP 6.1+, ROCm Clang, hipBLAS, rocBLAS, AMD COMGR, and rocprofiler-register. The installer builds the modified userspace runtimes, not the compiler stack.</p>
+              </div>
+            </article>
+            <article>
+              <div class="requirement-icon">SSD</div>
+              <div>
+                <h3>30 GiB free</h3>
+                <p>Enough room for source, build artifacts, two model GGUFs, and the BF16 vision projector. A separate model disk is supported.</p>
+              </div>
+            </article>
+          </div>
+
+          <aside class="check-card reveal">
+            <p class="kicker">Read-only preflight</p>
+            <h3>Check before installing</h3>
+            <div class="compact-command">
+              <code id="check-command">./install.sh --skip-packages --check-only</code>
+              <button class="copy-button small" type="button" data-copy-target="check-command"><span>Copy</span></button>
+            </div>
+            <ul>
+              <li>Debian / Ubuntu package support</li>
+              <li>Fedora / RHEL package support</li>
+              <li>Arch package support</li>
+              <li>No root-owned installation tree</li>
+              <li>No files copied into <code>/opt/rocm</code></li>
+            </ul>
+            <a href="https://rocm.docs.amd.com/projects/install-on-linux/en/latest/" class="text-link">ROCm installation documentation <span>↗</span></a>
+          </aside>
+        </div>
+      </section>
+
+      <section id="benchmarks" class="content-section section-shell benchmark-section">
+        <div class="section-heading reveal">
+          <span class="section-number">03</span>
+          <div>
+            <p class="kicker">The honest leaderboard</p>
+            <h2>Same chip. Very different measurements.</h2>
+          </div>
+        </div>
+
+        <div class="benchmark-intro reveal">
+          <p>
+            Strix Halo results vary with quantization, speculative method, acceptance, context depth, power limit, and—most of all—prompt.
+            This table keeps the headline numbers visible while preserving the protocol differences that make them non-interchangeable.
+          </p>
+          <div class="benchmark-filters" role="group" aria-label="Filter benchmark rows">
+            <button class="filter-button active" type="button" data-filter="all">All results</button>
+            <button class="filter-button" type="button" data-filter="ours">Measured here</button>
+            <button class="filter-button" type="button" data-filter="reported">Reported elsewhere</button>
+          </div>
+        </div>
+
+        <div class="table-wrap reveal">
+          <table>
+            <thead>
+              <tr>
+                <th>Stack</th>
+                <th>Backend</th>
+                <th>Target + speculation</th>
+                <th>Reported decode</th>
+                <th>Protocol / context</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-kind="ours" class="our-row">
+                <td><span class="kind ours">Measured here</span><strong>IQ4_XS + DFlash2, width 6</strong></td>
+                <td>Custom ROCm<br>retained PM4</td>
+                <td>All-calibrated IQ4_XS/Q8<br>IQ4_XS DFlash2</td>
+                <td><strong>25.67 prose</strong><br><strong>39.14 reasoning</strong><br><strong>58.53 JSON</strong></td>
+                <td>128 generated tokens; deterministic shallow prompts; two counterbalanced servers per cell</td>
+                <td><a href="https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo">Model card</a></td>
+              </tr>
+              <tr data-kind="ours" class="our-row">
+                <td><span class="kind ours">Measured here</span><strong>IQ4_XS + DFlash2, width 3</strong></td>
+                <td>Custom ROCm<br>retained PM4</td>
+                <td>All-calibrated IQ4_XS/Q8<br>IQ4_XS DFlash2</td>
+                <td><strong>25.74 prose</strong><br><strong>32.48 reasoning</strong><br><strong>41.03 JSON</strong></td>
+                <td>Same 128-token palindrome bracket; lower draft width benefits low-acceptance prose</td>
+                <td><a href="https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo">Model card</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>ROCmFP4 FAST + adaptive DFlash2</strong></td>
+                <td>Custom ROCmFPX / HIP</td>
+                <td>ROCmFP4 FAST<br>ROCmFP4 DFlash2</td>
+                <td><strong>45.44 code</strong><br>48.26 prose · 46.85 reasoning · 46.03 JSON</td>
+                <td>Adaptive width 3–7; 0.95+ reported acceptance; different target, engine, and prompts</td>
+                <td><a href="https://huggingface.co/kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF">ROCmFP4 card</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>UD-Q5_K_XL + DFlash2</strong></td>
+                <td>Vulkan / RADV</td>
+                <td>Q5_K_XL<br>Q4_K_M DFlash2, width 7</td>
+                <td><strong>31.4 t/s @ 80 W</strong><br>30.2 t/s @ 70 W</td>
+                <td>Four-task 1K-token average; 55.9% acceptance; per-task range 21.1–39.8 t/s</td>
+                <td><a href="https://www.reddit.com/r/LocalLLaMA/comments/1vsw6nz/qwen3827b_q5_k_xl_on_strix_halo_at_31_ts_decode/">LocalLLaMA report</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>ROCmFP4 STRIX + MTP</strong></td>
+                <td>ROCm 7.2.4</td>
+                <td>ROCmFP4 STRIX<br>Q4_0 MTP, width 4</td>
+                <td><strong>30.30 t/s</strong></td>
+                <td>8K decode; 256 tokens; greedy; median of 3–5; 92.6% MTP acceptance</td>
+                <td><a href="https://huggingface.co/kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF">ROCmFP4 card</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>UD-Q4_K_XL + DFlash2</strong></td>
+                <td>Vulkan / RADV</td>
+                <td>Q4_K_XL<br>Q4_K_M DFlash2, width 7</td>
+                <td><strong>28.5 t/s @ 80 W</strong><br>27.3 t/s @ 70 W</td>
+                <td>Same four-task 1K-token suite as Q5 result; 44.9% acceptance</td>
+                <td><a href="https://www.reddit.com/r/LocalLLaMA/comments/1vsw6nz/qwen3827b_q5_k_xl_on_strix_halo_at_31_ts_decode/">LocalLLaMA report</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">Historical</span><strong>Earlier DFlash2 Vulkan result</strong></td>
+                <td>Vulkan / RADV</td>
+                <td>UD-Q4_K_XL<br>DFlash2, width 4</td>
+                <td><strong>26.39 t/s</strong></td>
+                <td>Zero-context-depth historical result; superseded by newer Q5/Q4 four-task measurements</td>
+                <td><a href="https://github.com/Nathanw1014/strix-halo-llamacpp">Nathan toolbox</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>PieBru evidence-tracked recipes</strong></td>
+                <td>Vulkan / RADV</td>
+                <td>Q5 / Q6_K_XL / Q8<br>DFlash2</td>
+                <td><strong>~23 Q5</strong><br>~17–21 Q6 · ~15–18 Q8</td>
+                <td>Sustained recipe bands; prompt and context dependent; approximately 330 t/s prefill</td>
+                <td><a href="https://github.com/PieBru/Qwen-3.8-27B_Strix-Halo_gfx1151">Evidence repository</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>Official Ollama route</strong></td>
+                <td>Vulkan / RADV</td>
+                <td>Official qwen3.8:27b route</td>
+                <td><strong>20.42 t/s</strong></td>
+                <td>Nine warm repeats on a 128 GB GTR9 Pro; 292.49 prompt t/s; different runtime/API</td>
+                <td><a href="https://github.com/hogeheer499-commits/strix-halo-guide/blob/main/QWEN38_STRIX_HALO.md">Route matrix</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">Historical</span><strong>Early MTP write-up</strong></td>
+                <td>Vulkan / RADV</td>
+                <td>Q6_K target<br>MTP width 2</td>
+                <td><strong>18 t/s</strong><br>9.6 t/s baseline</td>
+                <td>Early report; width 2 beat width 5 by 19%; older runtime generation</td>
+                <td><a href="https://daily.dev/posts/jodyebgl9">daily.dev summary</a></td>
+              </tr>
+              <tr data-kind="ours" class="our-row">
+                <td><span class="kind ours">Measured here</span><strong>Selected target, no speculation</strong></td>
+                <td>Custom ROCm<br>retained PM4</td>
+                <td>All-calibrated IQ4_XS/Q8</td>
+                <td><strong>14.10 t/s</strong></td>
+                <td><code>llama-bench tg128</code>; retained PM4; zero-context synthetic decode</td>
+                <td><a href="https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo">Model card</a></td>
+              </tr>
+              <tr data-kind="reported">
+                <td><span class="kind reported">External</span><strong>ROCmFP4 STRIX, no speculation</strong></td>
+                <td>ROCm 7.2.4</td>
+                <td>ROCmFP4 STRIX</td>
+                <td><strong>13.46 t/s @ 8K</strong><br>12.58 t/s @ 32K</td>
+                <td>Greedy 256-token decode; context-filled server measurement</td>
+                <td><a href="https://huggingface.co/kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF">ROCmFP4 card</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="method-grid">
+          <article class="method-card reveal">
+            <p class="kicker">Our protocol</p>
+            <h3>Counterbalanced by construction</h3>
+            <p>Three deterministic workloads, 128 output tokens, one discarded warmup per server, two independently loaded servers per configuration, and palindrome ordering to expose drift.</p>
+          </article>
+          <article class="method-card reveal">
+            <p class="kicker">Correctness</p>
+            <h3>The verifier stayed authoritative</h3>
+            <p>Q8_0 and IQ4_XS DFlash2 produced identical target-output hashes for every workload. Acceptance changed slightly; final deterministic output did not.</p>
+          </article>
+          <article class="method-card reveal">
+            <p class="kicker">Read the numbers</p>
+            <h3>Acceptance is the hidden axis</h3>
+            <p>Our width-6 run ranges from 25.67 to 58.53 t/s solely because prompt-dependent draft acceptance ranges from 29.3% to 95.6%.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="content-section section-shell architecture-section">
+        <div class="section-heading reveal">
+          <span class="section-number">04</span>
+          <div>
+            <p class="kicker">What changes</p>
+            <h2>A faster path through the same hardware.</h2>
+          </div>
+        </div>
+        <div class="architecture-flow reveal" aria-label="Runtime architecture">
+          <div><small>Model</small><strong>IQ4_XS / Q8</strong><span>Calibrated target</span></div>
+          <b aria-hidden="true">→</b>
+          <div><small>Draft</small><strong>DFlash2 IQ4_XS</strong><span>Half-size sidecar</span></div>
+          <b aria-hidden="true">→</b>
+          <div><small>Engine</small><strong>UMA ring + TOP_K</strong><span>strix-halo branch</span></div>
+          <b aria-hidden="true">→</b>
+          <div><small>Runtime</small><strong>Retained PM4</strong><span>Custom HIP / ROCr</span></div>
+        </div>
+      </section>
+
+      <section class="support-section section-shell reveal">
+        <div>
+          <p class="kicker">Keep the experiments moving</p>
+          <h2>Useful? Help fund the next weird driver idea.</h2>
+          <p>The models, patches, installer, and benchmark notes are public. Support helps pay for hardware, power, storage, and the occasional very long compile.</p>
+        </div>
+        <a class="coffee-button" href="https://buymeacoffee.com/ilintar" rel="me noopener">
+          <span aria-hidden="true">☕</span>
+          Buy me a coffee
+        </a>
+      </section>
+    </main>
+
+    <footer class="site-footer section-shell">
+      <div>
+        <span class="brand-mark small" aria-hidden="true">SH</span>
+        <p>Experimental software for AMD Strix Halo. Measure your workload; keep your control arm.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/pwilkin/strix-halo">Source</a>
+        <a href="https://github.com/pwilkin/llama.cpp/tree/strix-halo">llama.cpp</a>
+        <a href="https://github.com/pwilkin/rocm-systems/tree/ilintar-experiments">ROCm</a>
+        <a href="https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo">Models</a>
+      </div>
+      <p>© <span id="year">2026</span> ilintar</p>
+    </footer>
+
+    <div class="toast" role="status" aria-live="polite">Copied to clipboard</div>
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+{
+  "updated": "2026-09-05",
+  "warning": "These rows use different prompts, context depths, power limits, quantizations, engines, and speculative policies. Compare protocol before comparing token rates.",
+  "our_protocol": {
+    "hardware": "AMD Ryzen AI Max+ 395 / Radeon 8060S / gfx1151",
+    "backend": "custom HIP and ROCr retained PM4",
+    "target": "Qwen3.8-27B-IQ4_XS-ALL-IMATRIX-Q8-OUT-MTP.gguf",
+    "draft": "Qwen3.8-27B-DFlash2-IQ4_XS.gguf",
+    "generated_tokens": 128,
+    "sampling": "temperature 0, top_k 1",
+    "repetitions": "two independently loaded servers per cell, palindrome order"
+  },
+  "results": [
+    {
+      "kind": "measured_here",
+      "stack": "IQ4_XS target + IQ4_XS DFlash2, width 6",
+      "backend": "custom ROCm retained PM4",
+      "decode_tps": { "prose": 25.665541, "reasoning": 39.143304, "json": 58.528619 },
+      "acceptance": { "prose": 0.29304029, "reasoning": 0.57647059, "json": 0.95575221 },
+      "source": "https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo"
+    },
+    {
+      "kind": "measured_here",
+      "stack": "IQ4_XS target + IQ4_XS DFlash2, width 3",
+      "backend": "custom ROCm retained PM4",
+      "decode_tps": { "prose": 25.742253, "reasoning": 32.480507, "json": 41.032393 },
+      "acceptance": { "prose": 0.47133758, "reasoning": 0.71666667, "json": 0.98958333 },
+      "source": "https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo"
+    },
+    {
+      "kind": "reported_elsewhere",
+      "stack": "ROCmFP4 FAST + adaptive ROCmFP4 DFlash2",
+      "backend": "custom ROCmFPX / HIP",
+      "decode_tps": { "code": 45.44, "prose": 48.26, "reasoning": 46.85, "json": 46.03 },
+      "acceptance": ">=0.95 reported",
+      "source": "https://huggingface.co/kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF"
+    },
+    {
+      "kind": "reported_elsewhere",
+      "stack": "UD-Q5_K_XL + Q4_K_M DFlash2, width 7",
+      "backend": "Vulkan / RADV",
+      "decode_tps": { "four_task_average_80w": 31.4, "four_task_average_70w": 30.2 },
+      "acceptance": 0.559,
+      "source": "https://www.reddit.com/r/LocalLLaMA/comments/1vsw6nz/qwen3827b_q5_k_xl_on_strix_halo_at_31_ts_decode/"
+    },
+    {
+      "kind": "reported_elsewhere",
+      "stack": "ROCmFP4 STRIX + Q4_0 MTP, width 4",
+      "backend": "ROCm 7.2.4",
+      "decode_tps": { "8k": 30.3 },
+      "acceptance": 0.926,
+      "source": "https://huggingface.co/kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF"
+    },
+    {
+      "kind": "reported_elsewhere",
+      "stack": "UD-Q4_K_XL + Q4_K_M DFlash2, width 7",
+      "backend": "Vulkan / RADV",
+      "decode_tps": { "four_task_average_80w": 28.5, "four_task_average_70w": 27.3 },
+      "acceptance": 0.449,
+      "source": "https://www.reddit.com/r/LocalLLaMA/comments/1vsw6nz/qwen3827b_q5_k_xl_on_strix_halo_at_31_ts_decode/"
+    },
+    {
+      "kind": "reported_elsewhere",
+      "stack": "Official Ollama qwen3.8:27b route",
+      "backend": "Vulkan / RADV",
+      "decode_tps": { "nine_warm_repeat_mean": 20.42 },
+      "source": "https://github.com/hogeheer499-commits/strix-halo-guide/blob/main/QWEN38_STRIX_HALO.md"
+    },
+    {
+      "kind": "measured_here",
+      "stack": "Selected IQ4_XS/Q8 target without speculation",
+      "backend": "custom ROCm retained PM4",
+      "decode_tps": { "llama_bench_tg128": 14.0976 },
+      "source": "https://huggingface.co/ilintar/qwen3.8-27b-gguf-strix-halo"
+    },
+    {
+      "kind": "reported_elsewhere",
+      "stack": "ROCmFP4 STRIX without speculation",
+      "backend": "ROCm 7.2.4",
+      "decode_tps": { "8k": 13.46, "32k": 12.58 },
+      "source": "https://huggingface.co/kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF"
+    }
+  ]
+}
