@@ -327,7 +327,7 @@ checkout_pinned() {
   [[ $configured_url == "$url" || $configured_url == "$expected_ssh" ]] || die "$destination uses unexpected origin $configured_url"
   [[ -z $(git -C "$destination" status --porcelain) ]] || die "$destination has local changes; preserve or remove them before rerunning the installer"
 
-  git -C "$destination" fetch --prune origin "$branch:refs/remotes/origin/$branch"
+  git -C "$destination" fetch origin "+refs/heads/$branch:refs/remotes/origin/$branch"
   if ! git -C "$destination" cat-file -e "$commit^{commit}" 2>/dev/null; then
     git -C "$destination" fetch origin "$commit"
   fi
