@@ -281,6 +281,7 @@ verify_rocm_sdk() {
   log "Verifying the system ROCm SDK at $root"
   [[ -x $root/bin/hipcc ]] || die "missing $root/bin/hipcc"
   [[ -x $root/lib/llvm/bin/clang++ ]] || die "missing ROCm clang++ under $root/lib/llvm/bin"
+  [[ -x $root/lib/llvm/bin/llvm-mc ]] || die "missing ROCm llvm-mc under $root/lib/llvm/bin"
 
   local package
   for package in hip hipblas rocblas amd_comgr rocprofiler-register; do
@@ -564,6 +565,8 @@ LD_LIBRARY_PATH="$hip_build_libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
     -DHIP_PLATFORM=amd \
     -DHIP_COMMON_DIR="$rocm_source/projects/hip" \
     -DHIPCC_BIN_DIR="$rocm_root/bin" \
+    -DLLVM_ROOT="$rocm_root/lib/llvm" \
+    -DClang_ROOT="$rocm_root/lib/llvm" \
     -DROCM_PATH="$rocr_install" \
     -Dhsa-runtime64_DIR="$rocr_install/lib/cmake/hsa-runtime64" \
     -DROCCLR_ENABLE_HSA=ON \
