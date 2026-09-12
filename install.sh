@@ -9,7 +9,7 @@ readonly rocm_repo_branch=ilintar-experiments
 readonly rocm_repo_commit=7dda3ac6cfe6bbe0b7f08c23a67cfa118d8641a1
 readonly llama_repo_url=https://github.com/pwilkin/llama.cpp.git
 readonly llama_repo_branch=strix-halo
-readonly llama_repo_commit=f2777445a46cc71e832dbf73bad1e9ba23ebacac
+readonly llama_repo_commit=f5daaa3cfa6358e5dd398911ec741813745a5440
 
 # STRIX_PROFILE picks which model this installer builds for. Both profiles share the
 # runtime and engine build; they differ in the weights and in the launcher flags.
@@ -30,8 +30,19 @@ case $profile in
     ;;
   flash-next)
     # 9 IQ4_NL shards plus the shared-embedding MTP draft. No projector: this one is text only.
-    readonly model_repo=@FLASH_REPO@
-    readonly model_files=(@FLASH_FILES@)
+    readonly model_repo=ilintar/qwen3.8-flash-next-gguf-strix-halo
+    readonly model_files=(
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00001-of-00009.gguf:5b6032b1f3428a148a3b63d661a992dbe0e5f8e278ab684b3d2b474bc5372d30
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00002-of-00009.gguf:81ea612c230e5c3ee1e1036873b316bd6f3d0ba00aa9e12da9238b3ec75ef643
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00003-of-00009.gguf:d4c2432777ad3f2073989d9b584aaa69ea53201c22bfa69b0efc58fb3d4ffb9c
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00004-of-00009.gguf:72e276e9ffd33891b0640136b7f8c3ac765d34b3fae57d91cdbd4d25ce61477c
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00005-of-00009.gguf:c61c34d8c6e27051fb903f7117c6577cbd87b945e7fcdd3b7642a794dec78bac
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00006-of-00009.gguf:c9b36bca38ad5994c24a9d840460c7c3763cd64dfe2816effe1eabef5d7fc77a
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00007-of-00009.gguf:b18c40e93081df6b1001ed344af7de796f07a754f23001376cc9ed2d400effba
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00008-of-00009.gguf:3389e8907ce093d3ad45f5b46f14098d34352241cbc676361edbed7186ab023e
+      Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00009-of-00009.gguf:8229be447e559c6f1186d8c878621afcf3466de71aca1b1c97e895288723b36e
+      mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf:5ff54097406a905cf3a724c709124ceb0e3e10235ee862298969e91c96fa96e6
+    )
     readonly main_model_name=Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00001-of-00009.gguf
     readonly draft_model_name=mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf
     readonly mmproj_repo=
@@ -480,8 +491,8 @@ source $(printf '%q' "$config")
 # table out of the resident set: the rows are pread() on demand instead of being faulted in
 # through an mmap that would also hold a second copy of every weight during load.
 ctx_size="\${CTX_SIZE:-65536}"
-batch_size="\${BATCH_SIZE:-24576}"
-ubatch_size="\${UBATCH_SIZE:-24576}"
+batch_size="\${BATCH_SIZE:-16384}"
+ubatch_size="\${UBATCH_SIZE:-16384}"
 parallel="\${PARALLEL:-1}"
 draft_n_max="\${MTP_N_MAX:-2}"
 export LLAMA_MMB=\${LLAMA_MMB:-1} LLAMA_MMB_MIN_T=\${LLAMA_MMB_MIN_T:-512} \\

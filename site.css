@@ -45,6 +45,7 @@ p{color:var(--muted-strong)}
 .panel ul{margin:0;padding-left:20px}
 .panel li{margin-bottom:6px}
 .panel li:last-child{margin-bottom:0}
+.panel .quote{font-family:var(--mono);font-size:.84rem;line-height:1.6;margin:0}
 .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel-solid)}
 table{border-collapse:collapse;width:100%;min-width:640px;font-size:.9rem}
 th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}

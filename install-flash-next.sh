@@ -3,7 +3,7 @@
 #
 # Same runtime and engine build as install.sh -- the retained-PM4 ROCr/HIP prefixes and the
 # strix-halo llama.cpp branch -- but a different model set and a launcher tuned for the
-# 24576-token prefill path. Kept as a separate entry point because the disk and memory
+# 16384-token prefill path. Kept as a separate entry point because the disk and memory
 # requirements are much larger than the 27B configuration's.
 #
 #   bash <(curl -fsSL https://raw.githubusercontent.com/pwilkin/strix-halo/main/install-flash-next.sh)
