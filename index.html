@@ -183,15 +183,15 @@
       <div class="scroll"><table>
         <thead><tr><th>Depth</th><th style="text-align:right">pp16384</th><th style="text-align:right">tg128</th></tr></thead>
         <tbody>
-          <tr><td>0</td><td class="num">1160.02 <span class="pm">± 1.89</span></td><td class="num">26.68 <span class="pm">± 0.47</span></td></tr>
-          <tr><td>40 000</td><td class="num">1072.90 <span class="pm">± 0.83</span></td><td class="num">16.09 <span class="pm">± 0.24</span></td></tr>
+          <tr><td>0</td><td class="num">1204.31 <span class="pm">± 2.31</span></td><td class="num">26.28 <span class="pm">± 0.29</span></td></tr>
+          <tr><td>40 000</td><td class="num">1086.29 <span class="pm">± 0.96</span></td><td class="num">16.63 <span class="pm">± 0.14</span></td></tr>
         </tbody>
       </table></div>
       <p style="margin-top:14px">Measured with a 16384-token batch and ubatch, which is what the
       installed launcher defaults to, so the whole prompt goes through as one batch. A 24576 ubatch
       measures the same within error (1199.63 &plusmn; 7.12 against 1204.31 &plusmn; 2.31 in the same
       session); 16384 is the default because it reserves smaller compute buffers, which on a unified
-      memory part is 8 GB less competing with the weights. Prefill holds 92% of its depth-0 rate at
+      memory part is 8 GB less competing with the weights. Prefill holds 90% of its depth-0 rate at
       40 000 tokens of context, which is the sparse attention path doing its job. Decode is the
       weaker half &mdash; the journey's paired run put it about 8% short of what the same kernels
       reach out of tree &mdash; and that gap is open and written up rather than smoothed over.</p>
