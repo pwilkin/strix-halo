@@ -6,18 +6,44 @@ IFS=$'\n\t'
 readonly installer_name=${0##*/}
 readonly rocm_repo_url=https://github.com/pwilkin/rocm-systems.git
 readonly rocm_repo_branch=ilintar-experiments
-readonly rocm_repo_commit=78d1160060bb6ada29b3b21e20c998a48161b257
+readonly rocm_repo_commit=7dda3ac6cfe6bbe0b7f08c23a67cfa118d8641a1
 readonly llama_repo_url=https://github.com/pwilkin/llama.cpp.git
 readonly llama_repo_branch=strix-halo
-readonly llama_repo_commit=d3b5cc43d1fcfce891f2de94d5274ee40eceb21c
-readonly model_repo=ilintar/qwen3.8-27b-gguf-strix-halo
-readonly main_model_name=Qwen3.8-27B-IQ4_XS-ALL-IMATRIX-Q8-OUT-MTP.gguf
-readonly main_model_sha256=9e5f86c794b45b215a2768723c94819500c0c8f896094d628728e6fc94cd6324
-readonly draft_model_name=Qwen3.8-27B-DFlash2-IQ4_XS.gguf
-readonly draft_model_sha256=11c7848014bd68040a42837b381bbefff5d0acc22cf20b6055a48d560c834445
-readonly mmproj_repo=bartowski/Qwen3.8-27B-GGUF
-readonly mmproj_name=mmproj-Qwen3.8-27B-bf16.gguf
-readonly mmproj_sha256=e43a597863a21bfa48b0fbd4553a771ae4117e25bb172e66f1dbc3fc6d037131
+readonly llama_repo_commit=f2777445a46cc71e832dbf73bad1e9ba23ebacac
+
+# STRIX_PROFILE picks which model this installer builds for. Both profiles share the
+# runtime and engine build; they differ in the weights and in the launcher flags.
+readonly profile=${STRIX_PROFILE:-qwen38-27b}
+case $profile in
+  qwen38-27b)
+    readonly model_repo=ilintar/qwen3.8-27b-gguf-strix-halo
+    readonly model_files=(
+      Qwen3.8-27B-IQ4_XS-ALL-IMATRIX-Q8-OUT-MTP.gguf:9e5f86c794b45b215a2768723c94819500c0c8f896094d628728e6fc94cd6324
+      Qwen3.8-27B-DFlash2-IQ4_XS.gguf:11c7848014bd68040a42837b381bbefff5d0acc22cf20b6055a48d560c834445
+    )
+    readonly main_model_name=Qwen3.8-27B-IQ4_XS-ALL-IMATRIX-Q8-OUT-MTP.gguf
+    readonly draft_model_name=Qwen3.8-27B-DFlash2-IQ4_XS.gguf
+    readonly mmproj_repo=bartowski/Qwen3.8-27B-GGUF
+    readonly mmproj_name=mmproj-Qwen3.8-27B-bf16.gguf
+    readonly mmproj_sha256=e43a597863a21bfa48b0fbd4553a771ae4117e25bb172e66f1dbc3fc6d037131
+    readonly model_disk_gib=30
+    ;;
+  flash-next)
+    # 9 IQ4_NL shards plus the shared-embedding MTP draft. No projector: this one is text only.
+    readonly model_repo=@FLASH_REPO@
+    readonly model_files=(@FLASH_FILES@)
+    readonly main_model_name=Qwen3.8-Flash-Next-IQ4_NL-PROJFIX-00001-of-00009.gguf
+    readonly draft_model_name=mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf
+    readonly mmproj_repo=
+    readonly mmproj_name=
+    readonly mmproj_sha256=
+    readonly model_disk_gib=110
+    ;;
+  *)
+    printf 'unknown STRIX_PROFILE: %s (expected qwen38-27b or flash-next)\n' "$profile" >&2
+    exit 2
+    ;;
+esac
 
 install_root=${STRIX_HALO_INSTALL_ROOT:-$HOME/.local/share/qwen3.8-strix-halo}
 model_dir=${STRIX_HALO_MODEL_DIR:-}
@@ -415,7 +441,9 @@ write_launchers() {
     printf 'STRIX_ROCM_ROOT=%q\n' "$rocm_root"
     printf 'STRIX_MAIN_MODEL=%q\n' "$model_dir/$main_model_name"
     printf 'STRIX_DFLASH_MODEL=%q\n' "$model_dir/$draft_model_name"
-    printf 'STRIX_MMPROJ_MODEL=%q\n' "$model_dir/$mmproj_name"
+    if [[ -n $mmproj_name ]]; then
+      printf 'STRIX_MMPROJ_MODEL=%q\n' "$model_dir/$mmproj_name"
+    fi
     printf 'STRIX_GENERIC_WRAPPER=%q\n' "$generic"
   } >"$config_tmp"
   chmod 0644 "$config_tmp"
@@ -442,6 +470,66 @@ fi
 exec "\$STRIX_LLAMA_SERVER" "\$@"
 EOF
   install -m 0755 "$generic_tmp" "$generic"
+
+  if [[ $profile == flash-next ]]; then
+    cat >"$optimized_tmp" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+source $(printf '%q' "$config")
+# --load-mode none with --lazy-mode on-direct is what keeps the 27.5 GB per-layer-embedding
+# table out of the resident set: the rows are pread() on demand instead of being faulted in
+# through an mmap that would also hold a second copy of every weight during load.
+ctx_size="\${CTX_SIZE:-65536}"
+batch_size="\${BATCH_SIZE:-24576}"
+ubatch_size="\${UBATCH_SIZE:-24576}"
+parallel="\${PARALLEL:-1}"
+draft_n_max="\${MTP_N_MAX:-2}"
+export LLAMA_MMB=\${LLAMA_MMB:-1} LLAMA_MMB_MIN_T=\${LLAMA_MMB_MIN_T:-512} \\
+  LLAMA_MMB_BF16W=\${LLAMA_MMB_BF16W:-1} LLAMA_MMB_GLU=\${LLAMA_MMB_GLU:-1} \\
+  LLAMA_MMB_TALL=\${LLAMA_MMB_TALL:-2} LLAMA_MMB_CACHE=\${LLAMA_MMB_CACHE:-4} \\
+  LLAMA_MMB_F32SPLIT=\${LLAMA_MMB_F32SPLIT:-2} LLAMA_MMB_HC16=\${LLAMA_MMB_HC16:-2} \\
+  LLAMA_MMB_SHADOW=\${LLAMA_MMB_SHADOW:-2} LLAMA_MMB_DOWN16=\${LLAMA_MMB_DOWN16:-1} \\
+  LLAMA_HC_CN_SHAPE=\${LLAMA_HC_CN_SHAPE:-1} LLAMA_HC_GATEMIX=\${LLAMA_HC_GATEMIX:-1} \\
+  LLAMA_HC_MIX_FUSE=\${LLAMA_HC_MIX_FUSE:-1} LLAMA_HC_BLK16=\${LLAMA_HC_BLK16:-1} \\
+  LLAMA_HC_RES16=\${LLAMA_HC_RES16:-1} LLAMA_HC_PACK_DI=\${LLAMA_HC_PACK_DI:-1} \\
+  LLAMA_NORM_GATED=\${LLAMA_NORM_GATED:-1} LLAMA_NORM_ROWS=\${LLAMA_NORM_ROWS:-1} \\
+  LLAMA_IDX_RELU_SUM=\${LLAMA_IDX_RELU_SUM:-1} LLAMA_PLE_CONV=\${LLAMA_PLE_CONV:-1} \\
+  LLAMA_GDN_CONV=\${LLAMA_GDN_CONV:-1} \\
+  LLAMA_QSA_SPARSE=\${LLAMA_QSA_SPARSE:-1} LLAMA_QSA_WHOLE_ATTN=\${LLAMA_QSA_WHOLE_ATTN:-1} \\
+  LLAMA_QSA_BLOCK_SELECTION=\${LLAMA_QSA_BLOCK_SELECTION:-1} \\
+  LLAMA_QSA_COMPACT_METADATA=\${LLAMA_QSA_COMPACT_METADATA:-1} \\
+  LLAMA_QSA_DENSE_SHORTCUT=\${LLAMA_QSA_DENSE_SHORTCUT:-1} \\
+  LLAMA_QSA_DIRECT_INDICES=\${LLAMA_QSA_DIRECT_INDICES:-1} \\
+  LLAMA_QSA_PACK_KEYS=\${LLAMA_QSA_PACK_KEYS:-1} LLAMA_QSA_PACK_VALUES=\${LLAMA_QSA_PACK_VALUES:-1} \\
+  LLAMA_QSA_QUERY_STRIP=\${LLAMA_QSA_QUERY_STRIP:-512} \\
+  LLAMA_QSA_SCORE_BOUNDS=\${LLAMA_QSA_SCORE_BOUNDS:-1} \\
+  LLAMA_QSA_NO_DENSE_MASK=\${LLAMA_QSA_NO_DENSE_MASK:-1} \\
+  LLAMA_QSA_FA_V3=\${LLAMA_QSA_FA_V3:-1} LLAMA_QSA_FUSE_EXPAND=\${LLAMA_QSA_FUSE_EXPAND:-1} \\
+  LLAMA_MTP_QSA=\${LLAMA_MTP_QSA:-1} LLAMA_MTP_QSA_MIN_T=\${LLAMA_MTP_QSA_MIN_T:-128}
+exec "\$STRIX_GENERIC_WRAPPER" \\
+  -m "\$STRIX_MAIN_MODEL" \\
+  -dev ROCm0 \\
+  -ngl 999 \\
+  -fa on \\
+  -fit off \\
+  --load-mode none \\
+  --lazy-mode on-direct \\
+  -ctk f16 -ctv f16 \\
+  -c "\$ctx_size" \\
+  -b "\$batch_size" \\
+  -ub "\$ubatch_size" \\
+  --parallel "\$parallel" \\
+  --jinja \\
+  --spec-type draft-mtp \\
+  --spec-draft-model "\$STRIX_DFLASH_MODEL" \\
+  --spec-draft-device ROCm0 \\
+  --spec-draft-ngl 99 \\
+  --spec-draft-n-max "\$draft_n_max" \\
+  "\$@"
+EOF
+    install -m 0755 "$optimized_tmp" "$optimized"
+    return
+  fi
 
   cat >"$optimized_tmp" <<EOF
 #!/usr/bin/env bash
@@ -620,11 +708,14 @@ ldd_output=$(LD_LIBRARY_PATH="$runtime_libs" ldd "$llama_build/bin/libggml-hip.s
 grep -Fq "$hip_install/lib/libamdhip64.so" <<<"$ldd_output" || die 'llama.cpp does not resolve libamdhip64 through the custom HIP prefix'
 grep -Fq "$rocr_install/lib/libhsa-runtime64.so" <<<"$ldd_output" || die 'llama.cpp does not resolve libhsa-runtime64 through the custom ROCr prefix'
 
-log "Using the pinned projector $mmproj_repo/$mmproj_name"
+for entry in "${model_files[@]}"; do
+  download_hf_file "$venv/bin/hf" "$model_repo" "${entry%%:*}" "${entry##*:}"
+done
 
-download_hf_file "$venv/bin/hf" "$model_repo" "$main_model_name" "$main_model_sha256"
-download_hf_file "$venv/bin/hf" "$model_repo" "$draft_model_name" "$draft_model_sha256"
-download_hf_file "$venv/bin/hf" "$mmproj_repo" "$mmproj_name" "$mmproj_sha256"
+if [[ -n $mmproj_repo ]]; then
+  log "Using the pinned projector $mmproj_repo/$mmproj_name"
+  download_hf_file "$venv/bin/hf" "$mmproj_repo" "$mmproj_name" "$mmproj_sha256"
+fi
 
 log 'Installing launchers and updating the user PATH'
 write_launchers

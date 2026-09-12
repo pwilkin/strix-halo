@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optimization journey — Qwen3.8-Next-Flash on Strix Halo</title>
+<meta name="description" content="Commit-by-commit record of the ROCm prefill work for Qwen3.8-Next-Flash on a Radeon 8060S, with the measurement for every step.">
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="site.css">
+<style>
+/* journey-only: the step table and the per-step cards */
+td.n{font-family:var(--mono);color:var(--muted);white-space:nowrap}
+.sha{margin-left:8px;color:var(--muted);font-size:.76rem}
+.up{color:var(--cyan);font-weight:600;margin-left:6px}
+.down{color:var(--red);font-weight:600;margin-left:6px}
+.flat{color:var(--muted);margin-left:6px}
+tr.pending td{opacity:.5}
+table{min-width:760px}
+.steps{display:grid;gap:16px}
+article{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+article header{display:flex;gap:12px;align-items:baseline;margin-bottom:10px;flex-wrap:wrap}
+article header .n{font-family:var(--mono);color:var(--violet);font-size:.85rem}
+article h3{margin:0;font-size:1.08rem}
+article p{margin:0 0 10px}
+article p:last-child{margin-bottom:0}
+.why,.meas{font-size:.92rem;padding-left:12px;border-left:2px solid var(--line-strong)}
+.why span{font-weight:600;color:var(--text);margin-right:6px}
+.meas{border-left-color:var(--cyan);font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+.meas.pending{border-left-color:var(--line);opacity:.6}
+.meas strong{color:var(--text)}
+</style>
+</head>
+<body>
+<header class="top"><div class="shell">
+  <span class="brand">Strix Halo Lab</span>
+  <nav>
+    <a href="index.html">Overview</a>
+    <a href="#table">Measurements</a>
+    <a href="#steps">Steps</a>
+    <a href="#method">Method</a>
+    <a href="https://github.com/pwilkin/llama.cpp/tree/strix-halo">Branch</a>
+  </nav>
+</div></header>
+
+<main>
+<div class="shell hero">
+  <p class="eyebrow">Optimization journey · 2026-09-12</p>
+  <h1>Getting Qwen3.8-Next-Flash to prefill on a Radeon 8060S</h1>
+  <p class="lede">A 177-billion-parameter hybrid model, 93 GiB of IQ4_NL weights and a 27.5 GB
+  per-layer-embedding table, on an integrated GPU with 256 GB/s of memory bandwidth. This is the
+  commit-by-commit record: what each change does, why it should help, and what it actually measured.</p>
+  <div class="cards">
+    <div class="card"><div class="k">1.00×</div><div class="l">prefill, start to finish</div></div>
+    <div class="card"><div class="k">16%</div><div class="l">of the out-of-tree reference stack</div></div>
+    <div class="card"><div class="k">1/1</div><div class="l">points measured</div></div>
+    <div class="card"><div class="k">16302</div><div class="l">operator tests passing</div></div>
+  </div>
+</div>
+
+<section id="table"><div class="shell">
+  <h2>Every step, measured</h2>
+  <p class="sub">One <code>llama-bench</code> run per commit, same command line throughout:
+  <code>-p 16384 -n 128 -d 0,40000 -b 24576 -ub 24576 -r 3</code>. The multiplier next to a prefill
+  figure is the ratio against the previous measured point, and anything inside 2% is shown as flat
+  rather than dressed up as a win.</p>
+  <div class="scroll"><table>
+    <thead><tr>
+      <th>#</th><th>Step</th>
+      <th style="text-align:right">pp16384 @ d0</th><th style="text-align:right">tg128 @ d0</th>
+      <th style="text-align:right">pp16384 @ d40k</th><th style="text-align:right">tg128 @ d40k</th>
+    </tr></thead>
+    <tbody>
+<tr class="pending">
+  <td class="n">00</td>
+  <td class="step"><strong>Starting point</strong>
+      <code class="sha">c5d692357</code></td>
+  <td class="num">191.25 <span class="pm">± 3.25</span> </td>
+  <td class="num">23.25 <span class="pm">± 0.20</span></td>
+  <td class="num">&mdash; </td>
+  <td class="num">&mdash;</td>
+</tr>
+    <tr><td class="n">ref</td>
+      <td class="step"><strong>Out-of-tree reference stack</strong>
+        <code class="sha">v46 + model-r</code></td>
+      <td class="num">1187.13 ± 31.40</td><td class="num">29.06 ± 1.45</td>
+      <td class="num">1082.92 ± 4.48</td><td class="num">19.02 ± 4.62</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section id="steps"><div class="shell">
+  <h2>What each step does</h2>
+  <p class="sub">In the order they land. Dependencies force some of it — the sparse attention graph has to
+  precede the kernel that consumes it — so this is not strictly biggest-win-first.</p>
+  <div class="steps">
+<article id="s-base">
+  <header><span class="n">00</span><h3>Starting point</h3>
+    <code class="sha">c5d692357</code></header>
+  <p>The strix-halo branch rebased onto upstream master, with nothing of our own on top except the restored <code>prop.integrated</code> flag. Lazy per-layer-embedding loading uses the upstream <code>--lazy-mode on</code> path, which demand-pages rows through the mmap.</p>
+  <p class="why"><span>Why</span> This is the honest baseline: everything here is already in mainline or in the UMA ring buffer stack, so every later number is attributable to one commit.</p>
+  <p class="meas pending">measurement pending</p>
+</article>
+  </div>
+</div></section>
+
+<section id="method"><div class="shell">
+  <h2>How this was measured, and what went wrong</h2>
+  <p class="sub">The failures were more instructive than the successes, so they are written down too.</p>
+  <div class="two">
+    <div class="panel">
+      <h3>Fixed environment</h3>
+      <p>Retained-PM4 HIP and ROCr, unified memory on, <code>gfx1151</code>. No <code>LD_PRELOAD</code>
+      and no kernel selected by anything other than the commit under test. Every run is wrapped in a
+      memory guard that stops it at 8 GiB of headroom rather than letting the OOM killer decide, and
+      takes an advisory GPU lock so two sessions cannot contend.</p>
+    </div>
+    <div class="panel">
+      <h3>The reference control</h3>
+      <p>Before concluding anything about a gap, the original out-of-tree stack was re-run on the same
+      machine on the same day. It reproduced within noise of its recorded figure, which is what made the
+      remaining difference attributable to code rather than to a machine that had drifted.</p>
+    </div>
+    <div class="panel">
+      <h3>An OOM worth keeping</h3>
+      <p>The first baseline attempt died with 27 GB resident and 151 GB of virtual address space. Under
+      unified memory with everything offloaded, the weights land in <em>managed</em> — anonymous — memory,
+      so all 93 GiB competes directly with the KV cache and the compute buffers. That is the whole reason
+      the lazy direct reader matters twice over.</p>
+    </div>
+    <div class="panel">
+      <h3>A false lead</h3>
+      <p>Five hyper-connection diagnostics were missing from our logs and present in the reference, which
+      looked like five broken paths. Four of them only print under a debug flag that had been left out;
+      their absence meant nothing. Only the fifth was real evidence, and it pointed at a single missing
+      env gate worth 1.15×.</p>
+    </div>
+    <div class="panel">
+      <h3>A bug caught by splitting</h3>
+      <p>The head-size-256 flash attention work conflicted with upstream retuning. Taking our narrower
+      RDNA3 gate compiled the DKQ=192 case down to <code>NO_DEVICE_CODE</code> while upstream's host-side
+      selector still chose it — a hardware exception, not a wrong number. Deferring that piece to its own
+      commit with its own verification is what surfaced it.</p>
+    </div>
+    <div class="panel">
+      <h3>Negative results, kept</h3>
+      <p>MMQ compaction, the transposed-concat tile and the head-size-256 tuning together moved depth-0
+      prefill by less than the run-to-run spread. The WMMA indexer scorer measured neutral-to-worse and
+      ships with its gate off. They are in the table at their measured value.</p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="shell">
+  <h2>Reproducing it</h2>
+  <p class="sub">The branch is <code>strix-halo</code> on <code>pwilkin/llama.cpp</code>, rebased on
+  upstream master. The series is 16 commits on top of the rebase point, each one buildable and
+  measurable on its own.</p>
+  <pre>git clone https://github.com/pwilkin/llama.cpp.git &amp;&amp; cd llama.cpp
+git checkout strix-halo
+HIPCXX="$(hipconfig -l)/clang++" HIP_PATH="$(hipconfig -R)" \
+  cmake -B build -DGGML_HIP=ON -DGPU_TARGETS=gfx1151 -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+
+build/bin/llama-bench -m Qwen3.8-Flash-Next-IQ4_NL-00001-of-00009.gguf \
+  -dev ROCm0 -ngl 999 -fa on -ctk f16 -ctv f16 \
+  -lm none -lzm on-direct -b 24576 -ub 24576 -p 16384 -n 128 -d 0,40000 -r 3</pre>
+</div></section>
+</main>
+
+<footer><div class="shell">
+  <p>Measured on a Ryzen AI Max+ with a Radeon 8060S (gfx1151), 128 GB unified memory, ROCm 10.0 with
+  the retained-PM4 HIP and ROCr runtimes. Figures are the mean of three repetitions with the spread
+  llama-bench reports; nothing here is a best-of.</p>
+</div></footer>
+</body>
+</html>
