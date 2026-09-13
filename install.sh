@@ -201,6 +201,26 @@ run_privileged() {
   fi
 }
 
+# True when the package's capability is already available under a different package name.
+# Only positive evidence counts; anything unrecognised stays on the install list.
+package_already_usable() {
+  case $1 in
+    python3-venv) python3 -m venv --help >/dev/null 2>&1 ;;
+    *)            return 1 ;;
+  esac
+}
+
+# Installing packages needs a password we cannot ask for when nothing is attached to stdin.
+require_package_privileges() {
+  ((EUID == 0)) && return 0
+  command -v sudo >/dev/null 2>&1 || die "sudo is required to install: $*"
+  sudo -n true >/dev/null 2>&1 && return 0
+  [[ -t 0 ]] && return 0
+  die "installing packages needs sudo, but this run is not interactive.
+Install them yourself and rerun, or rerun with --skip-packages:
+  sudo $package_install_hint $*"
+}
+
 install_build_packages() {
   ((install_packages == 1)) || return 0
 
@@ -218,7 +238,23 @@ install_build_packages() {
         missing+=("$package")
       fi
     done
+    local usable=()
+    for package in "${missing[@]}"; do
+      if package_already_usable "$package"; then
+        usable+=("$package")
+      fi
+    done
+    if ((${#usable[@]})); then
+      log "Already provided by this system, not installing: ${usable[*]}"
+      local remaining=()
+      for package in "${missing[@]}"; do
+        package_already_usable "$package" || remaining+=("$package")
+      done
+      missing=("${remaining[@]}")
+    fi
     if ((${#missing[@]})); then
+      package_install_hint='apt-get install -y --no-install-recommends'
+      require_package_privileges "${missing[@]}"
       log "Installing missing Debian/Ubuntu packages: ${missing[*]}"
       run_privileged apt-get update
       run_privileged apt-get install -y --no-install-recommends "${missing[@]}"
@@ -239,6 +275,8 @@ install_build_packages() {
       rpm -q "$package" >/dev/null 2>&1 || missing+=("$package")
     done
     if ((${#missing[@]})); then
+      package_install_hint='dnf install -y'
+      require_package_privileges "${missing[@]}"
       log "Installing missing Fedora/RHEL packages: ${missing[*]}"
       run_privileged dnf install -y "${missing[@]}"
     fi
