@@ -27,6 +27,9 @@ case $profile in
     readonly mmproj_name=mmproj-Qwen3.8-27B-bf16.gguf
     readonly mmproj_sha256=e43a597863a21bfa48b0fbd4553a771ae4117e25bb172e66f1dbc3fc6d037131
     readonly model_disk_gib=30
+    readonly draft_var=DFLASH_N_MAX
+    readonly draft_default=6
+    readonly draft_label='DFlash2 width'
     ;;
   flash-next)
     # 9 IQ4_NL shards plus the shared-embedding MTP draft. No projector: this one is text only.
@@ -49,6 +52,9 @@ case $profile in
     readonly mmproj_name=
     readonly mmproj_sha256=
     readonly model_disk_gib=110
+    readonly draft_var=MTP_N_MAX
+    readonly draft_default=2
+    readonly draft_label='MTP draft width'
     ;;
   *)
     printf 'unknown STRIX_PROFILE: %s (expected qwen38-27b or flash-next)\n' "$profile" >&2
@@ -717,8 +723,8 @@ Installed under:
 
 Models:
   $model_dir/$main_model_name
-  $model_dir/$draft_model_name
-  $model_dir/$mmproj_name
+  $model_dir/$draft_model_name${mmproj_name:+
+  $model_dir/$mmproj_name}
 
 Launchers:
   $local_bin/qwen3.8-strix-halo-server
@@ -737,9 +743,9 @@ Use the custom runtime with an arbitrary llama-server command:
   llama-server-strix-halo -m /path/to/model.gguf [other llama-server options]
 
 Useful runtime overrides:
-  CTX_SIZE=32768 DFLASH_N_MAX=3 qwen3.8-strix-halo-server
+  CTX_SIZE=32768 $draft_var=3 qwen3.8-strix-halo-server
   ENABLE_RETAINED_PM4=0 qwen3.8-strix-halo-server
 
-The optimized launcher defaults to a 65536-token context and DFlash2 width 6.
+The optimized launcher defaults to a 65536-token context and $draft_label $draft_default.
 Pass additional llama-server arguments normally; they are appended last.
 EOF
