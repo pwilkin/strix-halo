@@ -53,7 +53,7 @@ case $profile in
     readonly mmproj_sha256=
     readonly model_disk_gib=110
     readonly draft_var=MTP_N_MAX
-    readonly draft_default=2
+    readonly draft_default=3
     readonly draft_label='MTP draft width'
     ;;
   *)
@@ -548,7 +548,7 @@ ctx_size="\${CTX_SIZE:-65536}"
 batch_size="\${BATCH_SIZE:-16384}"
 ubatch_size="\${UBATCH_SIZE:-16384}"
 parallel="\${PARALLEL:-1}"
-draft_n_max="\${MTP_N_MAX:-2}"
+draft_n_max="\${MTP_N_MAX:-3}"
 exec "\$STRIX_GENERIC_WRAPPER" \\
   -m "\$STRIX_MAIN_MODEL" \\
   -dev ROCm0 \\
