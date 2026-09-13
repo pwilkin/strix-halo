@@ -9,7 +9,7 @@ readonly rocm_repo_branch=ilintar-experiments
 readonly rocm_repo_commit=7dda3ac6cfe6bbe0b7f08c23a67cfa118d8641a1
 readonly llama_repo_url=https://github.com/pwilkin/llama.cpp.git
 readonly llama_repo_branch=strix-halo
-readonly llama_repo_commit=f5daaa3cfa6358e5dd398911ec741813745a5440
+readonly llama_repo_commit=40c0b9c3835bf4e923570fb5929df5b59b50638f
 
 # STRIX_PROFILE picks which model this installer builds for. Both profiles share the
 # runtime and engine build; they differ in the weights and in the launcher flags.
@@ -514,7 +514,7 @@ export LLAMA_MMB=\${LLAMA_MMB:-1} LLAMA_MMB_MIN_T=\${LLAMA_MMB_MIN_T:-512} \\
   LLAMA_QSA_PACK_KEYS=\${LLAMA_QSA_PACK_KEYS:-1} LLAMA_QSA_PACK_VALUES=\${LLAMA_QSA_PACK_VALUES:-1} \\
   LLAMA_QSA_QUERY_STRIP=\${LLAMA_QSA_QUERY_STRIP:-512} \\
   LLAMA_QSA_SCORE_BOUNDS=\${LLAMA_QSA_SCORE_BOUNDS:-1} \\
-  LLAMA_QSA_NO_DENSE_MASK=\${LLAMA_QSA_NO_DENSE_MASK:-0} \\
+  LLAMA_QSA_NO_DENSE_MASK=\${LLAMA_QSA_NO_DENSE_MASK:-1} \\
   LLAMA_QSA_FA_V3=\${LLAMA_QSA_FA_V3:-1} LLAMA_QSA_FUSE_EXPAND=\${LLAMA_QSA_FUSE_EXPAND:-1} \\
   LLAMA_MTP_QSA=\${LLAMA_MTP_QSA:-1} LLAMA_MTP_QSA_MIN_T=\${LLAMA_MTP_QSA_MIN_T:-128}
 exec "\$STRIX_GENERIC_WRAPPER" \\
