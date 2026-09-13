@@ -467,6 +467,16 @@ download_hf_file() {
   verify_sha256 "$destination" "$expected" || die "SHA-256 verification failed for $destination"
 }
 
+add_launcher_path_blocks() {
+  add_path_block "$HOME/.profile"
+  if [[ -f $HOME/.bashrc ]]; then
+    add_path_block "$HOME/.bashrc"
+  fi
+  if [[ ${SHELL:-} == */zsh ]]; then
+    add_path_block "$HOME/.zshrc"
+  fi
+}
+
 add_path_block() {
   local file=$1
   local marker='# qwen3.8-strix-halo local launchers'
@@ -561,6 +571,8 @@ exec "\$STRIX_GENERIC_WRAPPER" \\
   "\$@"
 EOF
     install -m 0755 "$optimized_tmp" "$optimized"
+    rm -f "$generic_tmp" "$optimized_tmp"
+    add_launcher_path_blocks
     return
   fi
 
@@ -601,13 +613,7 @@ EOF
   install -m 0755 "$optimized_tmp" "$optimized"
   rm -f "$generic_tmp" "$optimized_tmp"
 
-  add_path_block "$HOME/.profile"
-  if [[ -f $HOME/.bashrc ]]; then
-    add_path_block "$HOME/.bashrc"
-  fi
-  if [[ ${SHELL:-} == */zsh ]]; then
-    add_path_block "$HOME/.zshrc"
-  fi
+  add_launcher_path_blocks
 }
 
 log 'Preparing system build dependencies'
