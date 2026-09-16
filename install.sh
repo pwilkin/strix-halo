@@ -9,7 +9,7 @@ readonly rocm_repo_branch=ilintar-experiments
 readonly rocm_repo_commit=7dda3ac6cfe6bbe0b7f08c23a67cfa118d8641a1
 readonly llama_repo_url=https://github.com/pwilkin/llama.cpp.git
 readonly llama_repo_branch=strix-halo
-readonly llama_repo_commit=40a9f4d01b69314d0f75c9120abe8e199e49111d
+readonly llama_repo_commit=14fff4f97d78c5f2ce3151102c573c464a5db70a
 
 # STRIX_PROFILE picks which model this installer builds for. Both profiles share the
 # runtime and engine build; they differ in the weights and in the launcher flags.
